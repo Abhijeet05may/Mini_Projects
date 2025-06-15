@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto MCQ Generator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.config-panel {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.quiz-question {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.option {
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option:hover {
+    background-color: #f1f8ff;
+}
+
+.option.selected {
+    background-color: #d1e7ff;
+    border-color: #0d6efd;
+}
+
+.option.correct {
+    background-color: #d4edda;
+    border-color: #28a745;
+}
+
+.option.incorrect {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+}
+
+.score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0d6efd;
+    border: 5px solid #0d6efd;
+}
+
+.timer {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+#quizProgress {
+    transition: width 0.3s ease;
+}
+
+.explanation-btn {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+}
+
+/* Animation for question transitions */
+.fade-in {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .score-circle {
+        width: 100px;
+        height: 100px;
+        font-size: 1.5rem;
+    }
+    
+    .option {
+        padding: 10px 12px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Auto MCQ Generator</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Configuration Panel -->
+                        <div class="config-panel mb-4">
+                            <h5 class="mb-3">Quiz Configuration</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <select class="form-select" id="subject">
+                                        <option value="general">General Knowledge</option>
+                                        <option value="science">Science</option>
+                                        <option value="history">History</option>
+                                        <option value="math">Mathematics</option>
+                                        <option value="english">English</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="difficulty" class="form-label">Difficulty</label>
+                                    <select class="form-select" id="difficulty">
+                                        <option value="easy">Easy</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="hard">Hard</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="questionCount" class="form-label">Number of Questions</label>
+                                    <input type="number" class="form-control" id="questionCount" min="1" max="20" value="10">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="topic" class="form-label">Topic (Optional)</label>
+                                    <input type="text" class="form-control" id="topic" placeholder="e.g., Algebra, World War II">
+                                </div>
+                                <div class="col-12">
+                                    <button id="generateBtn" class="btn btn-primary w-100">
+                                        <i class="fas fa-cogs me-2"></i>Generate Quiz
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Display Area -->
+                        <div id="quizArea" class="d-none">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 id="quizTitle" class="mb-0">Generated Quiz</h5>
+                                <div class="timer bg-light p-2 rounded">
+                                    <i class="fas fa-clock text-primary me-2"></i>
+                                    <span id="quizTimer">00:00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="progress mb-3">
+                                <div id="quizProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            
+                            <div id="questionContainer">
+                                <!-- Questions will be loaded here -->
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <button id="prevBtn" class="btn btn-secondary" disabled>
+                                    <i class="fas fa-arrow-left me-2"></i>Previous
+                                </button>
+                                <button id="nextBtn" class="btn btn-primary">
+                                    Next<i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                                <button id="submitBtn" class="btn btn-success d-none">
+                                    <i class="fas fa-check-circle me-2"></i>Submit Quiz
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Results Area -->
+                        <div id="resultsArea" class="d-none text-center py-4">
+                            <h4 class="mb-4">Quiz Results</h4>
+                            <div class="score-display mb-4">
+                                <div class="score-circle mx-auto">
+                                    <span id="scorePercent">0</span>%
+                                </div>
+                                <p class="mt-2">Your Score: <span id="scoreText">0</span>/<span id="totalQuestions">0</span></p>
+                            </div>
+                            
+                            <div class="row text-start mb-4">
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Correct: <span id="correctCount">0</span>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                    Incorrect: <span id="incorrectCount">0</span>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-clock text-info me-2"></i>
+                                    Time: <span id="timeTaken">00:00</span>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-tachometer-alt text-warning me-2"></i>
+                                    Accuracy: <span id="accuracy">0%</span>
+                                </div>
+                            </div>
+                            
+                            <button id="newQuizBtn" class="btn btn-primary me-2">
+                                <i class="fas fa-redo me-2"></i>New Quiz
+                            </button>
+                            <button id="reviewBtn" class="btn btn-outline-primary">
+                                <i class="fas fa-search me-2"></i>Review Answers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explanation Modal -->
+    <div class="modal fade" id="explanationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Explanation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="explanationText">Loading explanation...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const generateBtn = document.getElementById('generateBtn');
+    const quizArea = document.getElementById('quizArea');
+    const questionContainer = document.getElementById('questionContainer');
+    const quizTitle = document.getElementById('quizTitle');
+    const quizTimer = document.getElementById('quizTimer');
+    const quizProgress = document.getElementById('quizProgress');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultsArea = document.getElementById('resultsArea');
+    const scorePercent = document.getElementById('scorePercent');
+    const scoreText = document.getElementById('scoreText');
+    const totalQuestions = document.getElementById('totalQuestions');
+    const correctCount = document.getElementById('correctCount');
+    const incorrectCount = document.getElementById('incorrectCount');
+    const timeTaken = document.getElementById('timeTaken');
+    const accuracy = document.getElementById('accuracy');
+    const newQuizBtn = document.getElementById('newQuizBtn');
+    const reviewBtn = document.getElementById('reviewBtn');
+    const explanationModal = new bootstrap.Modal(document.getElementById('explanationModal'));
+    const explanationText = document.getElementById('explanationText');
+
+    // Quiz variables
+    let quizQuestions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let quizStartTime;
+    let timerInterval;
+    let timeElapsed = 0;
+    let isReviewMode = false;
+
+    // API configuration
+    const API_URL = 'https://opentdb.com/api.php'; // Using Open Trivia DB as example
+    // For production, replace with your own API or use a different service
+
+    // Event listeners
+    generateBtn.addEventListener('click', generateQuiz);
+    prevBtn.addEventListener('click', showPreviousQuestion);
+    nextBtn.addEventListener('click', showNextQuestion);
+    submitBtn.addEventListener('click', submitQuiz);
+    newQuizBtn.addEventListener('click', resetQuiz);
+    reviewBtn.addEventListener('click', reviewQuiz);
+
+    // Generate quiz based on user configuration
+    async function generateQuiz() {
+        const subject = document.getElementById('subject').value;
+        const difficulty = document.getElementById('difficulty').value;
+        const questionCount = document.getElementById('questionCount').value;
+        const topic = document.getElementById('topic').value.trim();
+
+        // Show loading state
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        generateBtn.disabled = true;
+
+        try {
+            // Fetch questions from API
+            quizQuestions = await fetchQuestions(subject, difficulty, questionCount, topic);
+            
+            if (quizQuestions.length === 0) {
+                throw new Error('No questions found with these parameters. Try different settings.');
+            }
+
+            // Initialize quiz variables
+            currentQuestionIndex = 0;
+            userAnswers = Array(quizQuestions.length).fill(null);
+            timeElapsed = 0;
+            isReviewMode = false;
+            
+            // Update UI
+            quizTitle.textContent = `Quiz: ${getSubjectName(subject)} ${topic ? `- ${topic}` : ''}`;
+            quizArea.classList.remove('d-none');
+            resultsArea.classList.add('d-none');
+            
+            // Start timer
+            quizStartTime = new Date();
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // Show first question
+            showQuestion(currentQuestionIndex);
+        } catch (error) {
+            alert(error.message);
+            console.error('Error generating quiz:', error);
+        } finally {
+            generateBtn.innerHTML = '<i class="fas fa-cogs me-2"></i>Generate Quiz';
+            generateBtn.disabled = false;
+        }
+    }
+
+    // Fetch questions from API
+    async function fetchQuestions(subject, difficulty, amount, topic) {
+        // Note: In a real application, you would use your own API or a service like Open Trivia DB
+        // This is a simplified example that simulates API calls
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Generate mock questions based on parameters
+        return generateMockQuestions(subject, difficulty, amount, topic);
+    }
+
+    // Display current question
+    function showQuestion(index) {
+        if (index < 0 || index >= quizQuestions.length) return;
+        
+        currentQuestionIndex = index;
+        const question = quizQuestions[index];
+        
+        // Update progress
+        quizProgress.style.width = `${((index + 1) / quizQuestions.length) * 100}%`;
+        
+        // Create question HTML
+        let questionHTML = `
+            <div class="quiz-question fade-in">
+                <h5 class="question-number">Question ${index + 1} of ${quizQuestions.length}</h5>
+                <div class="question-text mb-4">${question.question}</div>
+                <div class="options-container">
+        `;
+        
+        // Add options
+        question.options.forEach((option, i) => {
+            let optionClass = 'option';
+            
+            // Highlight selected answer
+            if (userAnswers[index] !== null && userAnswers[index].selected === i) {
+                optionClass += ' selected';
+            }
+            
+            // Highlight correct/incorrect answers in review mode
+            if (isReviewMode) {
+                if (option.correct) {
+                    optionClass += ' correct';
+                } else if (userAnswers[index] !== null && userAnswers[index].selected === i && !option.correct) {
+                    optionClass += ' incorrect';
+                }
+            }
+            
+            questionHTML += `
+                <div class="${optionClass}" data-option-index="${i}">
+                    ${option.text}
+                </div>
+            `;
+        });
+        
+        // Add explanation button if in review mode
+        if (isReviewMode && question.explanation) {
+            questionHTML += `
+                <button class="btn btn-sm btn-outline-secondary explanation-btn mt-3" data-explanation="${question.explanation}">
+                    <i class="fas fa-info-circle me-1"></i>View Explanation
+                </button>
+            `;
+        }
+        
+        questionHTML += `</div></div>`;
+        questionContainer.innerHTML = questionHTML;
+        
+        // Add event listeners to options
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', () => selectOption(option));
+        });
+        
+        // Add event listeners to explanation buttons
+        document.querySelectorAll('.explanation-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                explanationText.textContent = e.target.dataset.explanation || 
+                    (e.target.parentElement.dataset.explanation || 'No explanation available.');
+                explanationModal.show();
+            });
+        });
+        
+        // Update navigation buttons
+        prevBtn.disabled = index === 0;
+        
+        if (index === quizQuestions.length - 1) {
+            nextBtn.classList.add('d-none');
+            if (!isReviewMode) {
+                submitBtn.classList.remove('d-none');
+            }
+        } else {
+            nextBtn.classList.remove('d-none');
+            submitBtn.classList.add('d-none');
+        }
+    }
+
+    // Select an option
+    function selectOption(optionElement) {
+        if (isReviewMode) return;
+        
+        const optionIndex = parseInt(optionElement.dataset.optionIndex);
+        
+        // Clear previous selection
+        document.querySelectorAll('.option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Select new option
+        optionElement.classList.add('selected');
+        
+        // Store user answer
+        userAnswers[currentQuestionIndex] = {
+            selected: optionIndex,
+            correct: quizQuestions[currentQuestionIndex].options[optionIndex].correct
+        };
+    }
+
+    // Show previous question
+    function showPreviousQuestion() {
+        if (currentQuestionIndex > 0) {
+            showQuestion(currentQuestionIndex - 1);
+        }
+    }
+
+    // Show next question
+    function showNextQuestion() {
+        if (currentQuestionIndex < quizQuestions.length - 1) {
+            showQuestion(currentQuestionIndex + 1);
+        }
+    }
+
+    // Submit quiz and show results
+    function submitQuiz() {
+        clearInterval(timerInterval);
+        
+        // Calculate results
+        const correctAnswers = userAnswers.filter(answer => answer !== null && answer.correct).length;
+        const scorePercentage = Math.round((correctAnswers / quizQuestions.length) * 100);
+        const incorrectAnswers = quizQuestions.length - correctAnswers;
+        
+        // Update results UI
+        scorePercent.textContent = scorePercentage;
+        scoreText.textContent = correctAnswers;
+        totalQuestions.textContent = quizQuestions.length;
+        correctCount.textContent = correctAnswers;
+        incorrectCount.textContent = incorrectAnswers;
+        timeTaken.textContent = formatTime(timeElapsed);
+        accuracy.textContent = `${scorePercentage}%`;
+        
+        // Change score circle color based on performance
+        const scoreCircle = document.querySelector('.score-circle');
+        scoreCircle.style.borderColor = getScoreColor(scorePercentage);
+        scoreCircle.style.color = getScoreColor(scorePercentage);
+        
+        // Show results
+        quizArea.classList.add('d-none');
+        resultsArea.classList.remove('d-none');
+    }
+
+    // Reset quiz to initial state
+    function resetQuiz() {
+        quizArea.classList.add('d-none');
+        resultsArea.classList.add('d-none');
+        questionContainer.innerHTML = '';
+        clearInterval(timerInterval);
+    }
+
+    // Review quiz answers
+    function reviewQuiz() {
+        isReviewMode = true;
+        currentQuestionIndex = 0;
+        quizArea.classList.remove('d-none');
+        resultsArea.classList.add('d-none');
+        showQuestion(currentQuestionIndex);
+    }
+
+    // Update timer display
+    function updateTimer() {
+        timeElapsed++;
+        const minutes = Math.floor(timeElapsed / 60);
+        const seconds = timeElapsed % 60;
+        quizTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Change color when time is running long
+        if (timeElapsed > 300) { // 5 minutes
+            quizTimer.parentElement.classList.add('text-danger');
+        }
+    }
+
+    // Format time as MM:SS
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Get color based on score percentage
+    function getScoreColor(percentage) {
+        if (percentage >= 80) return '#28a745'; // Green
+        if (percentage >= 60) return '#ffc107'; // Yellow
+        if (percentage >= 40) return '#fd7e14'; // Orange
+        return '#dc3545'; // Red
+    }
+
+    // Get display name for subject
+    function getSubjectName(subject) {
+        const subjects = {
+            'general': 'General Knowledge',
+            'science': 'Science',
+            'history': 'History',
+            'math': 'Mathematics',
+            'english': 'English'
+        };
+        return subjects[subject] || subject;
+    }
+
+    // Generate mock questions for demonstration
+    function generateMockQuestions(subject, difficulty, amount, topic) {
+        const questions = [];
+        const difficulties = ['easy', 'medium', 'hard'];
+        
+        // Ensure difficulty is valid
+        if (!difficulties.includes(difficulty)) {
+            difficulty = 'medium';
+        }
+        
+        // Generate questions based on subject
+        for (let i = 0; i < amount; i++) {
+            let questionText, options, correctIndex, explanation;
+            
+            switch (subject) {
+                case 'science':
+                    questionText = topic ? `Which of these is related to ${topic}?` : 
+                        'Which of these is a fundamental force of nature?';
+                    options = topic ? [
+                        {text: 'Option A related to ' + topic, correct: true},
+                        {text: 'Option B unrelated', correct: false},
+                        {text: 'Option C unrelated', correct: false},
+                        {text: 'Option D unrelated', correct: false}
+                    ] : [
+                        {text: 'Gravity', correct: true},
+                        {text: 'Friction', correct: false},
+                        {text: 'Momentum', correct: false},
+                        {text: 'Velocity', correct: false}
+                    ];
+                    explanation = topic ? 
+                        `This question tests your knowledge about ${topic}. The correct answer is clearly related to the topic.` : 
+                        'Gravity is one of the four fundamental forces of nature, along with electromagnetism, strong nuclear force, and weak nuclear force.';
+                    break;
+                    
+                case 'history':
+                    questionText = topic ? `What was significant about ${topic}?` : 
+                        'When did World War II end?';
+                    options = topic ? [
+                        {text: 'Significance A of ' + topic, correct: true},
+                        {text: 'Significance B incorrect', correct: false},
+                        {text: 'Significance C incorrect', correct: false},
+                        {text: 'Significance D incorrect', correct: false}
+                    ] : [
+                        {text: '1945', correct: true},
+                        {text: '1939', correct: false},
+                        {text: '1950', correct: false},
+                        {text: '1941', correct: false}
+                    ];
+                    explanation = topic ? 
+                        `This question assesses your understanding of ${topic}'s historical significance.` : 
+                        'World War II ended in 1945 after the surrender of Axis powers.';
+                    break;
+                    
+                case 'math':
+                    const a = Math.floor(Math.random() * 10) + 1;
+                    const b = Math.floor(Math.random() * 10) + 1;
+                    questionText = topic ? `Calculate ${topic} for these values` : 
+                        `What is ${a} + ${b}?`;
+                    options = topic ? [
+                        {text: 'Calculation A for ' + topic, correct: true},
+                        {text: 'Calculation B incorrect', correct: false},
+                        {text: 'Calculation C incorrect', correct: false},
+                        {text: 'Calculation D incorrect', correct: false}
+                    ] : [
+                        {text: (a + b).toString(), correct: true},
+                        {text: (a + b + 2).toString(), correct: false},
+                        {text: (a * b).toString(), correct: false},
+                        {text: (a - b).toString(), correct: false}
+                    ];
+                    explanation = topic ? 
+                        `This question tests your ability to calculate ${topic}.` : 
+                        `The sum of ${a} and ${b} is ${a + b}.`;
+                    break;
+                    
+                case 'english':
+                    questionText = topic ? `Which of these relates to ${topic}?` : 
+                        'Identify the correct sentence:';
+                    options = topic ? [
+                        {text: 'Option A related to ' + topic, correct: true},
+                        {text: 'Option B unrelated', correct: false},
+                        {text: 'Option C unrelated', correct: false},
+                        {text: 'Option D unrelated', correct: false}
+                    ] : [
+                        {text: 'She went to the store.', correct: true},
+                        {text: 'She goed to the store.', correct: false},
+                        {text: 'She going to the store.', correct: false},
+                        {text: 'She gone to the store.', correct: false}
+                    ];
+                    explanation = topic ? 
+                        `This question evaluates your understanding of ${topic} in English.` : 
+                        'The correct sentence uses the simple past tense "went" which is the correct past form of "go".';
+                    break;
+                    
+                default: // general knowledge
+                    questionText = topic ? `What do you know about ${topic}?` : 
+                        'What is the capital of France?';
+                    options = topic ? [
+                        {text: 'Fact A about ' + topic, correct: true},
+                        {text: 'Fact B incorrect', correct: false},
+                        {text: 'Fact C incorrect', correct: false},
+                        {text: 'Fact D incorrect', correct: false}
+                    ] : [
+                        {text: 'Paris', correct: true},
+                        {text: 'London', correct: false},
+                        {text: 'Berlin', correct: false},
+                        {text: 'Madrid', correct: false}
+                    ];
+                    explanation = topic ? 
+                        `This question checks your general knowledge about ${topic}.` : 
+                        'Paris has been the capital of France since the 5th century.';
+            }
+            
+            // Adjust difficulty by modifying options
+            if (difficulty === 'easy') {
+                // Make correct answer more obvious
+                options[0].text = options.find(opt => opt.correct).text;
+                options[0].correct = true;
+                for (let j = 1; j < options.length; j++) {
+                    options[j].correct = false;
+                }
+            } else if (difficulty === 'hard') {
+                // Make options more similar
+                options.forEach(opt => {
+                    if (!opt.correct) {
+                        opt.text = opt.text.replace('unrelated', 'possibly related')
+                                            .replace('incorrect', 'plausible');
+                    }
+                });
+            }
+            
+            // Shuffle options (except for easy difficulty)
+            if (difficulty !== 'easy') {
+                for (let i = options.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [options[i], options[j]] = [options[j], options[i]];
+                }
+            }
+            
+            questions.push({
+                question: questionText,
+                options: options,
+                explanation: explanation,
+                difficulty: difficulty,
+                subject: subject,
+                topic: topic || 'general'
+            });
+        }
+        
+        return questions;
+    }
+});
+    </script>
+</body>
+</html>

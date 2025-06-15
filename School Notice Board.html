@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>School Notice Board</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: transparent;
+      color: #e0e0e0;
+      padding: 20px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .notice-board {
+      background-color: transparent;
+      border: 15px solid #8f6d63;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      color: #e0e0e0;
+      max-width: 0 auto;
+      margin: 0 auto;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .board-header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px dashed #888;
+      padding-bottom: 15px;
+      position: relative;
+    }
+
+    .board-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    .notice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .notice-card {
+      background-color: rgba(58, 58, 58, 0.8);
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      border-left: 4px solid #000000;
+      cursor: pointer;
+    }
+
+    .notice-card:hover {
+      transform: translateY(-5px);
+      background-color: rgba(74, 74, 74, 0.9);
+    }
+
+    .notice-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    .notice-content {
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .notice-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #f08080;
+    }
+
+    .notice-date {
+      font-style: italic;
+    }
+
+    .notice-source {
+      font-weight: 600;
+    }
+
+    .btn-view-more {
+      display: block;
+      width: 200px;
+      margin: 0 auto;
+      background-color: rgba(13, 110, 253, 0.25);
+      color: #e0e0e0;
+      font-weight: 600;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      transition: all 0.3s;
+    }
+
+    .btn-view-more:hover {
+      background-color: rgba(13, 109, 253, 0.452);
+      transform: scale(1.05);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .notice-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .board-title {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="Container fluid">
+  <div class="notice-board">
+    <div class="board-header">
+      <h1 class="board-title">School Notice Board</h1>
+      <p>Latest updates from CBSE & ICSE</p>
+    </div>
+
+    <div class="notice-grid" id="noticeGrid">
+      <!-- Notices will be loaded here -->
+    </div>
+
+    <button class="btn btn-view-more" id="viewMoreBtn">View More Notices</button>
+  </div>
+</section>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const allNotices = [
+        {
+          title: "CBSE 2024 Board Exam Dates Released",
+          content: "Class 10 and 12 board exams to be conducted from February 15 to April 10, 2024. Practical exams from January 1 to February 15.",
+          source: "CBSE Examination",
+          isNew: true,
+          date: "2024-01-05"
+        },
+        {
+          title: "ICSE Introduces AI and Robotics Curriculum",
+          content: "New elective subjects in Artificial Intelligence and Robotics to be offered from Class 9 starting 2024-25 academic session.",
+          source: "ICSE Academics",
+          isNew: true,
+          date: "2024-01-10"
+        },
+        {
+          title: "CBSE Mandatory Internship for Class 11-12",
+          content: "All students must complete a 4-week summer internship in their chosen field of study from 2024 onwards.",
+          source: "CBSE Skill Education",
+          isNew: true,
+          date: "2024-01-15"
+        },
+        {
+          title: "ICSE 2024 Examination Pattern Changes",
+          content: "Revised exam pattern with 30% competency-based questions for all subjects in ICSE 2024 exams.",
+          source: "CISCE",
+          isNew: false,
+          date: "2023-12-20"
+        },
+        {
+          title: "CBSE Digital Marking System Implementation",
+          content: "All answer sheets for 2024 board exams will be digitally evaluated through the new OMR-based system.",
+          source: "CBSE Examination",
+          isNew: false,
+          date: "2023-12-15"
+        },
+        {
+          title: "ICSE Environmental Studies Project",
+          content: "Compulsory environmental studies project with field work for all Class 9-10 students from 2024.",
+          source: "ICSE Environment",
+          isNew: false,
+          date: "2023-12-10"
+        },
+        {
+          title: "CBSE National Yoga Championship",
+          content: "Registration open for CBSE National Yoga Championship to be held in March 2024 at Delhi.",
+          source: "CBSE Sports",
+          isNew: true,
+          date: "2024-01-08"
+        },
+        {
+          title: "ICSE Multilingual Education Policy",
+          content: "Students can now answer exams in 22 scheduled languages apart from English from 2025 session.",
+          source: "ICSE Academics",
+          isNew: true,
+          date: "2024-01-12"
+        },
+        {
+          title: "CBSE Teacher Training on NEP 2020",
+          content: "Mandatory 5-day training for all teachers on National Education Policy implementation from February 2024.",
+          source: "CBSE Training",
+          isNew: true,
+          date: "2024-01-18"
+        },
+        {
+          title: "ICSE Heritage India Quiz 2024",
+          content: "National level Heritage India Quiz registration deadline extended to February 15, 2024.",
+          source: "ICSE Cultural",
+          isNew: false,
+          date: "2023-12-05"
+        },
+        {
+          title: "CBSE Financial Literacy Program",
+          content: "New financial literacy curriculum to be introduced for Classes 6-12 from April 2024.",
+          source: "CBSE Commerce",
+          isNew: true,
+          date: "2024-01-20"
+        },
+        {
+          title: "ICSE Coding Curriculum Update",
+          content: "Python programming to be included as compulsory module for Class 8 students from 2024-25.",
+          source: "ICSE Computer",
+          isNew: false,
+          date: "2023-11-30"
+        },
+        {
+          title: "CBSE Green School Awards 2024",
+          content: "Applications invited for CBSE Green School Certification with new sustainability parameters.",
+          source: "CBSE Environment",
+          isNew: true,
+          date: "2024-01-22"
+        },
+        {
+          title: "ICSE Mental Health Initiative",
+          content: "Weekly mental health sessions and counselor training program for all affiliated schools.",
+          source: "ICSE Wellness",
+          isNew: false,
+          date: "2023-11-25"
+        },
+        {
+          title: "CBSE Space Science Olympiad",
+          content: "First National Space Science Olympiad to be conducted in April 2024 for Class 9-12 students.",
+          source: "CBSE Science",
+          isNew: true,
+          date: "2024-01-25"
+        },
+        {
+          title: "ICSE Performing Arts Festival",
+          content: "Annual performing arts festival dates announced for March 15-20, 2024 in Kolkata.",
+          source: "ICSE Arts",
+          isNew: false,
+          date: "2023-11-20"
+        },
+        {
+          title: "CBSE Disaster Preparedness Drill",
+          content: "Mandatory quarterly disaster preparedness drills for all CBSE schools from 2024.",
+          source: "CBSE Safety",
+          isNew: true,
+          date: "2024-01-28"
+        },
+        {
+          title: "ICSE International Exchange Program",
+          content: "New student exchange program with schools in Singapore and Japan starting July 2024.",
+          source: "ICSE Global",
+          isNew: false,
+          date: "2023-11-15"
+        }
+      ];
+
+      const noticeGrid = document.getElementById('noticeGrid');
+      const viewMoreBtn = document.getElementById('viewMoreBtn');
+      let visibleNoticeCount = 6; // Increased initial visible notices
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        return date.toLocaleDateString('en-IN', options);
+      }
+
+      function displayNotices() {
+        noticeGrid.innerHTML = '';
+
+        // Sort notices by date (newest first)
+        const sortedNotices = [...allNotices].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        for (let i = 0; i < Math.min(visibleNoticeCount, sortedNotices.length); i++) {
+          const notice = sortedNotices[i];
+          const noticeCard = document.createElement('div');
+          noticeCard.className = 'notice-card';
+
+          const isRecent = new Date() - new Date(notice.date) < 7 * 24 * 60 * 60 * 1000; // Within 7 days
+          const dateText = isRecent
+            ? '<span class="badge bg-warning text-dark">NEW</span> ' + formatDate(notice.date)
+            : `Posted on ${formatDate(notice.date)}`;
+
+          noticeCard.innerHTML = `
+            <h3 class="notice-title">${notice.title}</h3>
+            <p class="notice-content">${notice.content}</p>
+            <div class="notice-meta">
+              <span class="notice-date">${dateText}</span>
+              <span class="notice-source">${notice.source}</span>
+            </div>
+          `;
+
+          noticeCard.addEventListener('click', function () {
+            alert(`Notice Details:\n\nTitle: ${notice.title}\n\nContent: ${notice.content}\n\nSource: ${notice.source}\n\nDate: ${formatDate(notice.date)}`);
+          });
+
+          noticeGrid.appendChild(noticeCard);
+        }
+
+        if (visibleNoticeCount >= sortedNotices.length) {
+          viewMoreBtn.style.display = 'none';
+        } else {
+          viewMoreBtn.style.display = 'block';
+        }
+      }
+
+      displayNotices();
+
+      viewMoreBtn.addEventListener('click', function () {
+        visibleNoticeCount += 6;
+        displayNotices();
+        setTimeout(() => {
+          noticeGrid.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      });
+    });
+  </script>
+</body>
+</html>

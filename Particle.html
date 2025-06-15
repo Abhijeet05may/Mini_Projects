@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Particle Effect</title>
+    <style>
+        /* Basic body styling */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: sans-serif;
+            overflow: hidden; /* Prevents scrollbars from the canvas */
+        }
+
+        /* Styles for the hero section container */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background-color: #f0f2f5; /* A light background color */
+        }
+
+        /* Z-index to ensure content is above the particle background */
+        .hero-content {
+            z-index: 2;
+            text-align: center;
+            color: #333;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        /* This is the container for the particles canvas */
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Sits behind the content */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section where the particle effect will be the background -->
+    <section class="hero">
+        <!-- The div where particles.js will create the canvas -->
+        <div id="particles-js"></div>
+
+        <!-- Content that will appear on top of the particles -->
+        <div class="hero-content">
+            <h1>Particle Effect Background</h1>
+            <p>This is an example of the particles.js library creating a cool, animated background.</p>
+        </div>
+    </section>
+
+    <!-- The particles.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <!-- Script to initialize and configure particles.js -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // This initializes the particle effect on the element with the ID 'particles-js'
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80, // Number of particles
+                        "density": {
+                            "enable": true,
+                            "value_area": 800 // Area where particles will be distributed
+                        }
+                    },
+                    "color": {
+                        "value": "#6c63ff" // Color of the particles
+                    },
+                    "shape": {
+                        "type": "circle", // Shape of the particles
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        },
+                        "polygon": {
+                            "nb_sides": 5
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.5, // Base opacity of particles
+                        "random": false,
+                        "anim": {
+                            "enable": false,
+                            "speed": 1,
+                            "opacity_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "size": {
+                        "value": 3, // Base size of particles
+                        "random": true, // Particles will have random sizes
+                        "anim": {
+                            "enable": false,
+                            "speed": 40,
+                            "size_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "line_linked": {
+                        "enable": true, // Enables linking lines between particles
+                        "distance": 150, // Maximum distance for linking
+                        "color": "#6c63ff", // Color of the lines
+                        "opacity": 0.4,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true, // Enables particle movement
+                        "speed": 2, // Speed of movement
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out", // What happens when particles reach the edge
+                        "bounce": false,
+                        "attract": {
+                            "enable": false,
+                            "rotateX": 600,
+                            "rotateY": 1200
+                        }
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab" // On hover, grab the particles
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push" // On click, push particles away
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 140,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "bubble": {
+                            "distance": 400,
+                            "size": 40,
+                            "duration": 2,
+                            "opacity": 8,
+                            "speed": 3
+                        },
+                        "repulse": {
+                            "distance": 200,
+                            "duration": 0.4
+                        },
+                        "push": {
+                            "particles_nb": 4 // Number of particles to push
+                        },
+                        "remove": {
+                            "particles_nb": 2
+                        }
+                    }
+                },
+                "retina_detect": true // Improves rendering on high-resolution screens
+            });
+        });
+    </script>
+
+</body>
+</html>

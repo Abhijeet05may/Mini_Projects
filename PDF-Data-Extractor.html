@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My User-Friendly PDF Extractor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- pdf.js from Mozilla CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles for a polished look */
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* Style for the file input drop zone */
+        .drop-zone {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-zone--over {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #27272a; /* zinc-800 */
+        }
+        /* Hide the default file input */
+        .drop-zone__input {
+            display: none;
+        }
+        /* Custom scrollbar for the textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #27272a; /* zinc-800 */
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #52525b; /* zinc-600 */
+            border-radius: 10px;
+            border: 2px solid #27272a; /* zinc-800 */
+        }
+        /* Style for the custom modal */
+        #modal {
+            transition: opacity 0.3s ease;
+        }
+        /* Progress bar transition */
+        #progress-bar {
+            transition: width 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-zinc-900 text-slate-200 flex items-center justify-center min-h-screen p-4 md:p-8">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">PDF Data Extractor</h1>
+            <p class="text-slate-400 mt-2">A simple, private tool to extract text from your PDFs.</p>
+        </header>
+
+        <main>
+            <!-- 1. Upload Section -->
+            <div id="upload-section" class="w-full">
+                <label for="pdf-file-input" class="drop-zone flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer bg-zinc-800/50 hover:bg-zinc-800">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-10 h-10 mb-4 text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        </svg>
+                        <p class="mb-2 text-lg text-slate-400"><span class="font-semibold text-slate-300">Click to upload</span> or drag and drop</p>
+                        <p class="text-xs text-slate-500">PDF (MAX. 20MB)</p>
+                    </div>
+                    <input id="pdf-file-input" type="file" class="drop-zone__input" accept=".pdf">
+                </label>
+            </div> 
+
+            <!-- 2. Processing Section -->
+            <div id="processing-section" class="hidden text-center py-12 px-4">
+                <div id="file-info" class="mb-6 text-slate-400">
+                    <p class="font-semibold text-slate-200" id="file-name"></p>
+                    <p class="text-sm" id="file-size"></p>
+                </div>
+                <p class="text-lg text-slate-300 mb-4">Extracting text...</p>
+                <div class="w-full bg-zinc-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <p id="progress-text" class="mt-2 text-sm text-slate-400">Page 0 of 0</p>
+            </div>
+
+
+            <!-- 3. Result Section -->
+            <div id="result-section" class="hidden">
+                <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-white">Extracted Text</h2>
+                    <div class="flex items-center gap-2">
+                        <button id="copy-button" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors">Copy Text</button>
+                        <button id="download-button" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-colors">Download .txt</button>
+                    </div>
+                </div>
+                <textarea id="extracted-text" readonly class="w-full h-96 p-4 bg-zinc-800 border border-slate-700 rounded-md text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                 <button id="start-over-button" class="mt-4 px-4 py-2 bg-slate-600 text-white font-semibold rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 transition-colors">Extract Another PDF</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Modal for Notifications -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden pointer-events-none" onclick="hideModal()">
+        <div id="modal-content" class="bg-zinc-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center transform transition-all" onclick="event.stopPropagation()">
+            <h3 id="modal-title" class="text-lg font-medium leading-6 text-white"></h3>
+            <div class="mt-2">
+                <p id="modal-body" class="text-sm text-slate-400"></p>
+            </div>
+            <div class="mt-4">
+                <button type="button" id="modal-close-button" class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-800" onclick="hideModal()">
+                    Got it
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set the workerSrc for pdf.js. This is required.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        // --- DOM Element References ---
+        const dropZone = document.querySelector('.drop-zone');
+        const fileInput = document.getElementById('pdf-file-input');
+        const uploadSection = document.getElementById('upload-section');
+        const processingSection = document.getElementById('processing-section');
+        const resultSection = document.getElementById('result-section');
+        
+        const fileNameEl = document.getElementById('file-name');
+        const fileSizeEl = document.getElementById('file-size');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        const extractedTextArea = document.getElementById('extracted-text');
+        const copyButton = document.getElementById('copy-button');
+        const downloadButton = document.getElementById('download-button');
+        const startOverButton = document.getElementById('start-over-button');
+        
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+
+        let currentFileName = '';
+
+        // --- Drag and Drop Event Handlers ---
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drop-zone--over');
+        });
+
+        ['dragleave', 'dragend'].forEach(type => {
+            dropZone.addEventListener(type, () => dropZone.classList.remove('drop-zone--over'));
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drop-zone--over');
+            
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                if (file.type === 'application/pdf') {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelect(file);
+                } else {
+                    showModal('Invalid File Type', 'Please select a PDF file.');
+                }
+            }
+        });
+
+        // --- File Input Change Handler ---
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
+        });
+        
+        /**
+         * Validates and prepares the file for processing.
+         * @param {File} file The PDF file selected by the user.
+         */
+        function handleFileSelect(file) {
+            const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+            if (file.size > MAX_FILE_SIZE) {
+                showModal('File Too Large', `Please select a file smaller than ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
+                fileInput.value = ''; // Reset file input
+                return;
+            }
+
+            currentFileName = file.name;
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            
+            uploadSection.classList.add('hidden');
+            processingSection.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+
+            const reader = new FileReader();
+            reader.onload = (event) => extractTextFromPdf(new Uint8Array(event.target.result));
+            reader.onerror = () => {
+                showModal('File Read Error', 'There was an issue reading the selected file.');
+                resetUI();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        /**
+         * Extracts text content from a PDF, updating the progress bar along the way.
+         * @param {Uint8Array} pdfData The binary data of the PDF file.
+         */
+        async function extractTextFromPdf(pdfData) {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                const numPages = pdf.numPages;
+                let fullText = '';
+                
+                updateProgress(0, numPages);
+
+                for (let i = 1; i <= numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n\n';
+                    updateProgress(i, numPages);
+                }
+
+                extractedTextArea.value = fullText.trim();
+                processingSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error parsing PDF:', error);
+                let message = 'Could not parse the PDF file. It might be corrupted or password-protected.';
+                if (error.name === 'PasswordException') {
+                    message = 'This PDF is password-protected and cannot be processed.';
+                }
+                showModal('Extraction Failed', message);
+                resetUI();
+            }
+        }
+
+        /**
+         * Updates the progress bar and text.
+         * @param {number} currentPage The current page being processed.
+         * @param {number} totalPages The total number of pages in the PDF.
+         */
+        function updateProgress(currentPage, totalPages) {
+            const percent = totalPages > 0 ? (currentPage / totalPages) * 100 : 0;
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = `Processing page ${currentPage} of ${totalPages}...`;
+        }
+        
+        // --- UI Interaction Handlers ---
+        
+        copyButton.addEventListener('click', () => {
+            if (extractedTextArea.value) {
+                extractedTextArea.select();
+                extractedTextArea.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    showModal('Success!', 'The extracted text has been copied to your clipboard.');
+                } catch (err) {
+                    showModal('Copy Failed', 'Could not copy text automatically. Please copy it manually.');
+                }
+                window.getSelection().removeAllRanges(); // Deselect
+            }
+        });
+        
+        downloadButton.addEventListener('click', () => {
+            const blob = new Blob([extractedTextArea.value], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentFileName.replace(/\.pdf$/i, '')}_extracted.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        startOverButton.addEventListener('click', resetUI);
+
+        /** Resets the UI to its initial state. */
+        function resetUI() {
+            uploadSection.classList.remove('hidden');
+            processingSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            
+            fileInput.value = '';
+            extractedTextArea.value = '';
+            currentFileName = '';
+            
+            updateProgress(0, 0); // Reset progress bar
+        }
+
+        // --- Modal Functions ---
+        
+        /**
+         * Displays the custom modal with a message.
+         * @param {string} title The title for the modal.
+         * @param {string} body The main message content.
+         */
+        function showModal(title, body) {
+            modalTitle.textContent = title;
+            modalBody.textContent = body;
+            modal.classList.remove('hidden');
+            modal.classList.add('pointer-events-auto');
+            // Animate entrance
+            modalContent.classList.remove('opacity-0', 'scale-95');
+        }
+
+        function hideModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('pointer-events-auto');
+        }
+
+    </script>
+</body>
+</html>

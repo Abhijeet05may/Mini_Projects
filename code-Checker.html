@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Difference Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for webkit browsers */
+        textarea::-webkit-scrollbar,
+        div::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track,
+        div::-webkit-scrollbar-track {
+            background: #2d3748; /* gray-800 */
+        }
+        textarea::-webkit-scrollbar-thumb,
+        div::-webkit-scrollbar-thumb {
+            background: #4a5568; /* gray-600 */
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover,
+        div::-webkit-scrollbar-thumb:hover {
+            background: #718096; /* gray-500 */
+        }
+        .diff-line {
+            white-space: pre;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
+
+    <header class="bg-gray-800 shadow-md p-4">
+        <h1 class="text-2xl font-bold text-center text-cyan-400">Code Difference Checker</h1>
+        <p class="text-center text-gray-400 mt-1">Paste your code in the panels below and click 'Compare' to see the differences.</p>
+    </header>
+
+    <main class="flex-grow container mx-auto p-4 md:p-6 lg:p-8">
+        <!-- Input Textareas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label for="code-input-1" class="block text-lg font-semibold mb-2 text-gray-300">Original Code</label>
+                <textarea id="code-input-1" class="w-full h-64 p-3 bg-gray-800 border-2 border-gray-700 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm font-mono" placeholder="Paste the first version of your code here..."></textarea>
+            </div>
+            <div>
+                <label for="code-input-2" class="block text-lg font-semibold mb-2 text-gray-300">Modified Code</label>
+                <textarea id="code-input-2" class="w-full h-64 p-3 bg-gray-800 border-2 border-gray-700 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm font-mono" placeholder="Paste the second version of your code here..."></textarea>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center items-center space-x-4 mb-8">
+            <button id="compare-btn" class="px-8 py-3 bg-cyan-600 text-white font-bold rounded-lg hover:bg-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                Compare Code
+            </button>
+            <button id="sample-btn" class="px-6 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors duration-300">
+                Load Sample
+            </button>
+            <button id="clear-btn" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-300">
+                Clear
+            </button>
+        </div>
+        
+        <!-- Legend -->
+        <div class="flex justify-center items-center space-x-6 mb-6 text-sm">
+            <div class="flex items-center"><span class="w-4 h-4 rounded-sm bg-red-900 bg-opacity-50 border border-red-700 mr-2"></span> Removed</div>
+            <div class="flex items-center"><span class="w-4 h-4 rounded-sm bg-green-900 bg-opacity-50 border border-green-700 mr-2"></span> Added</div>
+            <div class="flex items-center"><span class="w-4 h-4 rounded-sm bg-gray-700 mr-2"></span> Common</div>
+        </div>
+
+        <!-- Output Display -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-lg font-semibold mb-2 text-gray-300">Result: Original</h3>
+                <div id="diff-output-1" class="w-full h-96 p-3 bg-gray-800 border-2 border-gray-700 rounded-lg overflow-auto font-mono text-sm shadow-inner"></div>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-2 text-gray-300">Result: Modified</h3>
+                <div id="diff-output-2" class="w-full h-96 p-3 bg-gray-800 border-2 border-gray-700 rounded-lg overflow-auto font-mono text-sm shadow-inner"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center p-4 text-gray-500 text-sm">
+        <p>A simple and effective tool for code comparison.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeInput1 = document.getElementById('code-input-1');
+            const codeInput2 = document.getElementById('code-input-2');
+            const diffOutput1 = document.getElementById('diff-output-1');
+            const diffOutput2 = document.getElementById('diff-output-2');
+            const compareBtn = document.getElementById('compare-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const sampleBtn = document.getElementById('sample-btn');
+
+            // --- Main Comparison Logic ---
+            compareBtn.addEventListener('click', () => {
+                const text1 = codeInput1.value;
+                const text2 = codeInput2.value;
+                
+                const lines1 = text1.split('\n');
+                const lines2 = text2.split('\n');
+
+                const diff = diffLines(lines1, lines2);
+
+                renderDiff(diff, diffOutput1, diffOutput2);
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                codeInput1.value = '';
+                codeInput2.value = '';
+                diffOutput1.innerHTML = '';
+                diffOutput2.innerHTML = '';
+            });
+
+            sampleBtn.addEventListener('click', () => {
+                codeInput1.value = `function factorial(n) {
+    if (n === 0) {
+        return 1;
+    }
+    // This is the recursive step
+    return n * factorial(n - 1);
+}
+
+console.log('Factorial of 5 is:', factorial(5));
+`;
+                codeInput2.value = `// Using iteration instead of recursion
+function factorial(n) {
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+console.log(\`The Factorial of 5 is \${factorial(5)}\`);
+`;
+                compareBtn.click();
+            });
+
+            /**
+             * Implements the Longest Common Subsequence algorithm to find the diff.
+             * @param {string[]} lines1 - Array of lines from the first text.
+             * @param {string[]} lines2 - Array of lines from the second text.
+             * @returns {object[]} - An array of objects representing the diff.
+             */
+            function diffLines(lines1, lines2) {
+                // LCS DP table
+                const lcs = Array(lines1.length + 1).fill(null).map(() => Array(lines2.length + 1).fill(0));
+
+                for (let i = 1; i <= lines1.length; i++) {
+                    for (let j = 1; j <= lines2.length; j++) {
+                        if (lines1[i - 1] === lines2[j - 1]) {
+                            lcs[i][j] = lcs[i - 1][j - 1] + 1;
+                        } else {
+                            lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
+                        }
+                    }
+                }
+
+                // Backtrack to find the diff
+                let i = lines1.length;
+                let j = lines2.length;
+                const diffResult = [];
+
+                while (i > 0 || j > 0) {
+                    if (i > 0 && j > 0 && lines1[i - 1] === lines2[j - 1]) {
+                        diffResult.unshift({ type: 'common', line: lines1[i - 1] });
+                        i--;
+                        j--;
+                    } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+                        diffResult.unshift({ type: 'added', line: lines2[j - 1] });
+                        j--;
+                    } else if (i > 0 && (j === 0 || lcs[i][j - 1] < lcs[i - 1][j])) {
+                        diffResult.unshift({ type: 'removed', line: lines1[i - 1] });
+                        i--;
+                    } else {
+                        // Should not happen, but as a safeguard
+                        break;
+                    }
+                }
+                return diffResult;
+            }
+            
+            /**
+             * Renders the diff result into the output panels.
+             * @param {object[]} diff - The diff result from diffLines.
+             * @param {HTMLElement} out1 - The first output element.
+             * @param {HTMLElement} out2 - The second output element.
+             */
+            function renderDiff(diff, out1, out2) {
+                out1.innerHTML = '';
+                out2.innerHTML = '';
+                let lineNum1 = 1;
+                let lineNum2 = 1;
+
+                diff.forEach(part => {
+                    const line = escapeHtml(part.line);
+                    switch (part.type) {
+                        case 'common':
+                            out1.appendChild(createLineElement(lineNum1++, line, 'bg-gray-700 bg-opacity-20'));
+                            out2.appendChild(createLineElement(lineNum2++, line, 'bg-gray-700 bg-opacity-20'));
+                            break;
+                        case 'removed':
+                            out1.appendChild(createLineElement(lineNum1++, line, 'bg-red-900 bg-opacity-50 border-l-2 border-red-500'));
+                            out2.appendChild(createLineElement(' ', '', 'bg-gray-800', true)); // Placeholder
+                            break;
+                        case 'added':
+                            out1.appendChild(createLineElement(' ', '', 'bg-gray-800', true)); // Placeholder
+                            out2.appendChild(createLineElement(lineNum2++, line, 'bg-green-900 bg-opacity-50 border-l-2 border-green-500'));
+                            break;
+                    }
+                });
+            }
+            
+            /**
+             * Creates a styled line element for the output.
+             * @param {number|string} num - The line number.
+             * @param {string} text - The line content.
+             * @param {string} bgClass - The background class for styling.
+             * @param {boolean} isPlaceholder - If the line is just a placeholder.
+             * @returns {HTMLElement} - The created div element.
+             */
+            function createLineElement(num, text, bgClass, isPlaceholder = false) {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = `flex diff-line ${bgClass}`;
+                
+                const numSpan = document.createElement('span');
+                numSpan.className = 'w-10 text-right pr-4 text-gray-500 select-none flex-shrink-0';
+                numSpan.textContent = num;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow';
+                textSpan.innerHTML = text.length === 0 ? '&nbsp;' : text;
+                
+                if (isPlaceholder) {
+                    lineDiv.innerHTML = '&nbsp;'; // Keep height consistent
+                } else {
+                    lineDiv.appendChild(numSpan);
+                    lineDiv.appendChild(textSpan);
+                }
+
+                return lineDiv;
+            }
+
+            /**
+             * Escapes HTML special characters to prevent XSS.
+             * @param {string} unsafe - The string to escape.
+             * @returns {string} - The escaped string.
+             */
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+        });
+    </script>
+
+</body>
+</html>

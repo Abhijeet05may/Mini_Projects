@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enlarged Flip Clock 2025</title>
+  <!-- Bootstrap & Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter for geometric minimalism -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: linear-gradient(120deg, #23272f 0%, #181a20 100%);
+      font-family: 'Inter', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .container {
+      max-width: 100vw;
+      padding: 3.5rem 2vw 2.5rem 2vw;
+      background: transparent;
+      border-radius: 1.5rem;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 {
+      margin-bottom: 3rem;
+      color: #e0e7ff;
+      font-weight: 900;
+      font-size: 3.5rem;
+      letter-spacing: 0.01em;
+      text-align: center;
+      text-shadow: 0 4px 24px #0006;
+    }
+    #flipclock {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2.5rem;
+      flex-wrap: nowrap;
+      margin-bottom: 2.5rem;
+    }
+    .flip {
+      margin: 0 0.3rem;
+      display: flex;
+      align-items: center;
+    }
+    .flip .card {
+      transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1), box-shadow 0.3s;
+      transform-style: preserve-3d;
+      position: relative;
+      background: #23272f;
+      border-radius: 2.6rem;
+      border: none;
+      box-shadow: 0 12px 48px 0 rgba(0,0,0,0.22), 0 2.5px 0 #1e2228 inset;
+      min-width: 8.2rem;
+      min-height: 12.2rem;
+      outline: 4px solid #818cf8;
+      outline-offset: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .flip .card.flip-animate {
+      transform: rotateX(-180deg) scale(1.07);
+      box-shadow: 0 24px 72px 0 rgba(129,140,248,0.25);
+    }
+    .flip .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 2.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6.2rem;
+      font-family: 'Inter', Arial, sans-serif;
+      font-weight: 900;
+      color: #f8fafc;
+      background: #23272f;
+      letter-spacing: 0.04em;
+      box-shadow: none;
+      text-shadow: 0 2px 16px #0008;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    .flip .card-face.back {
+      transform: rotateX(180deg);
+      background: #181a20;
+      color: #818cf8;
+    }
+    .colon {
+      margin: 0 0.7rem;
+      color: #818cf8;
+      font-size: 5.5rem;
+      font-weight: 900;
+      user-select: none;
+      align-self: center;
+      opacity: 0.93;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      text-shadow: 0 2px 16px #0006;
+    }
+    .ampm {
+      margin-left: 2.5rem;
+      padding: 0.0em 1.0em;
+      font-size: 2.2rem;
+      border-radius: 2.7rem;
+      background: #23272f;
+      color: #818cf8;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+      box-shadow: 0 4px 16px #0002;
+      border: 3px solid #818cf8;
+      height: 4.4rem;
+      display: inline-flex;
+      align-items: center;
+      user-select: none;
+      transition: background 0.2s, color 0.2s;
+      vertical-align: middle;
+    }
+    .ampm[data-pm="true"] {
+      background: #818cf8;
+      color: #23272f;
+      border-color: #23272f;
+    }
+    .caption {
+      margin-top: 2.2rem;
+      color: #94a3b8;
+      font-size: 1.3rem;
+      letter-spacing: 0.03em;
+      text-align: center;
+      text-shadow: 0 1px 6px #0005;
+    }
+    #fullscreenBtn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      background-color: #23272f;
+      border: 2px solid #818cf8;
+      color: #818cf8;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #fullscreenBtn:hover {
+      background-color: #818cf8;
+      color: #23272f;
+    }
+    @media (max-width: 900px) {
+      h1 { font-size: 2.2rem; margin-bottom: 1.5rem;}
+      #flipclock { gap: 1.2rem; margin-bottom: 1.2rem;}
+      .flip .card { min-width: 4.1rem; min-height: 6.1rem; border-radius: 1.3rem; outline-width: 2px; outline-offset: -4px;}
+      .flip .card-face { font-size: 3.1rem; border-radius: 1.3rem;}
+      .colon { font-size: 2.8rem; margin: 0 0.3rem;}
+      .ampm { margin-left: 1.2rem; font-size: 1.1rem; height: 2.2rem; padding: 0.13em 1.1em; border-radius: 1.3rem;}
+      .caption { font-size: 0.85rem; margin-top: 1.1rem;}
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0.5rem 0.1rem;}
+      h1 { font-size: 1.3rem; margin-bottom: 1rem;}
+      #flipclock { gap: 0.3rem; margin-bottom: 0.6rem;}
+      .flip .card { min-width: 2.2rem; min-height: 3.1rem; border-radius: 0.7rem;}
+      .flip .card-face { font-size: 1.3rem; border-radius: 0.7rem;}
+      .colon { font-size: 1.1rem; margin: 0 0.1rem;}
+      .ampm { margin-left: 0.6rem; font-size: 0.7rem; height: 1.1rem; padding: 0.06em 0.6em; border-radius: 0.7rem;}
+      .caption { font-size: 0.7rem; margin-top: 0.5rem;}
+    }
+  </style>
+</head>
+<body>
+
+  <button id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
+
+  <div class="container">
+    <div id="flipclock">
+      <!-- Flip cards and colons will be injected here -->
+    </div>
+  </div>
+
+  <script>
+    function createFlipCard(id, initial) {
+      return `
+        <div class="flip">
+          <div id="card-${id}" class="card">
+            <div class="card-face front">${initial}</div>
+            <div class="card-face back">${initial}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    const clock = document.getElementById('flipclock');
+    const ids = ['h1','h2','m1','m2','s1','s2'];
+    ids.forEach((id, i) => {
+      clock.innerHTML += createFlipCard(id, '0');
+      if (id === 'h2' || id === 'm2') {
+        clock.innerHTML += `<span class="colon">:</span>`;
+      }
+    });
+    clock.innerHTML += `<span id="ampm" class="ampm" data-pm="false">AM</span>`;
+
+    function get12HourTime(date) {
+      let hour = date.getHours();
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      hour = hour % 12;
+      if (hour === 0) hour = 12;
+      return {
+        h1: Math.floor(hour / 10).toString(),
+        h2: (hour % 10).toString(),
+        m1: Math.floor(date.getMinutes() / 10).toString(),
+        m2: (date.getMinutes() % 10).toString(),
+        s1: Math.floor(date.getSeconds() / 10).toString(),
+        s2: (date.getSeconds() % 10).toString(),
+        ampm
+      };
+    }
+
+    let prev = {h1:'0',h2:'0',m1:'0',m2:'0',s1:'0',s2:'0',ampm:'AM'};
+    function updateClock() {
+      const now = new Date();
+      const t = get12HourTime(now);
+      ids.forEach(id => {
+        if (t[id] !== prev[id]) {
+          const card = document.getElementById('card-' + id);
+          const front = card.querySelector('.front');
+          const back = card.querySelector('.back');
+          back.textContent = t[id];
+          card.classList.add('flip-animate');
+          setTimeout(() => {
+            front.textContent = t[id];
+            card.classList.remove('flip-animate');
+          }, 500);
+        }
+      });
+      if (t.ampm !== prev.ampm) {
+        const ampmEl = document.getElementById('ampm');
+        ampmEl.textContent = t.ampm;
+        ampmEl.setAttribute('data-pm', t.ampm === 'PM');
+      }
+      prev = t;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Fullscreen toggle
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          alert(`Error trying to enter fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>

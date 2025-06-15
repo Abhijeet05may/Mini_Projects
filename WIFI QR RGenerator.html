@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WiFi Card Generator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QRious Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-2 text-center">WiFi Card Generator</h1>
+    <p class="text-gray-600 mb-6 text-center">Create and share your WiFi credentials effortlessly</p>
+    <div class="mb-4">
+      <label class="block text-gray-700 mb-1" for="wifi-name">WiFi Name (SSID)</label>
+      <input id="wifi-name" type="text" class="w-full border rounded p-2" placeholder="Enter WiFi Name" />
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-700 mb-1" for="wifi-password">Password</label>
+      <input id="wifi-password" type="text" class="w-full border rounded p-2" placeholder="Enter Password" />
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-700 mb-1" for="encryption-type">Encryption</label>
+      <select id="encryption-type" class="w-full border rounded p-2">
+        <option value="WPA">WPA/WPA2</option>
+        <option value="WEP">WEP</option>
+        <option value="nopass">None</option>
+      </select>
+    </div>
+    <div class="flex gap-2 mb-6">
+      <button id="copy-btn" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 w-full">Copy Credentials</button>
+      <button id="download-btn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">Download QR Code</button>
+    </div>
+    <div id="qr-container" class="flex flex-col items-center mb-4"></div>
+  </div>
+  <script>
+    const ssidInput = document.getElementById("wifi-name");
+    const passwordInput = document.getElementById("wifi-password");
+    const encryptionInput = document.getElementById("encryption-type");
+    const qrContainer = document.getElementById("qr-container");
+
+    function getWifiString() {
+      const ssid = ssidInput.value.trim();
+      const password = passwordInput.value.trim();
+      const encryption = encryptionInput.value.trim();
+      return `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+    }
+
+    function updateQRCode() {
+      qrContainer.innerHTML = "";
+      const qr = new QRious({
+        element: document.createElement("canvas"),
+        value: getWifiString(),
+        size: 200,
+        foreground: "#3a7bd5",
+        background: "#ffffff",
+      });
+      qrContainer.appendChild(qr.element);
+
+      // Show SSID and password below QR in preview
+      const ssid = ssidInput.value.trim();
+      const password = passwordInput.value.trim();
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "text-center mt-4";
+      infoDiv.innerHTML = `
+        <div class="text-gray-800 font-semibold">SSID: <span class="font-normal">${ssid || "&mdash;"}</span></div>
+        <div class="text-gray-800 font-semibold">Password: <span class="font-normal">${password || "(none)"}</span></div>
+      `;
+      qrContainer.appendChild(infoDiv);
+    }
+
+    // Live preview
+    ssidInput.addEventListener("input", updateQRCode);
+    passwordInput.addEventListener("input", updateQRCode);
+    encryptionInput.addEventListener("change", updateQRCode);
+
+    // Initial preview
+    updateQRCode();
+
+    // Copy credentials
+    document.getElementById("copy-btn").addEventListener("click", function() {
+      const ssid = ssidInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!ssid) {
+        alert("Please enter WiFi name (SSID)!");
+        return;
+      }
+      const text = `SSID: ${ssid}\nPassword: ${password}`;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("WiFi credentials copied to clipboard!");
+      });
+    });
+
+    // Download QR with SSID and password below
+    document.getElementById("download-btn").addEventListener("click", function() {
+      const ssid = ssidInput.value.trim();
+      const password = passwordInput.value.trim();
+      const qrCanvas = qrContainer.querySelector("canvas");
+      if (!qrCanvas) {
+        alert("Generate a QR code first!");
+        return;
+      }
+      const qrWidth = qrCanvas.width;
+      const qrHeight = qrCanvas.height;
+      const padding = 20;
+      const lineHeight = 28;
+      const textFont = "bold 18px Arial";
+      const textLines = [
+        `SSID: ${ssid}`,
+        `Password: ${password ? password : "(none)"}`
+      ];
+      const canvasHeight = qrHeight + padding + lineHeight * textLines.length + padding;
+      const canvas = document.createElement("canvas");
+      canvas.width = qrWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(qrCanvas, 0, 0);
+      ctx.font = textFont;
+      ctx.fillStyle = "#222";
+      ctx.textAlign = "center";
+      textLines.forEach((line, i) => {
+        ctx.fillText(line, qrWidth / 2, qrHeight + padding + lineHeight * i);
+      });
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL();
+      link.download = "wifi-qr-code.png";
+      link.click();
+    });
+  </script>
+</body>
+</html>

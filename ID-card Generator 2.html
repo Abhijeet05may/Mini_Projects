@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Card Generator</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* General Dark Mode Styles */
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark-mode .card {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+}
+
+.dark-mode .form-control {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+.dark-mode .form-control:focus {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #007bff; /* Bootstrap primary color for focus */
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.dark-mode .form-control::placeholder {
+    color: #888;
+}
+
+.dark-mode .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.dark-mode .btn-primary:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.dark-mode .btn-success {
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+.dark-mode .btn-success:hover {
+    transform: translateY(-2px);
+}
+
+.dark-mode .btn-danger {
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+.dark-mode .btn-danger:hover {
+    transform: translateY(-2px);
+}
+
+/* Glow Effect for Title */
+.glow-effect {
+    font-size: 2.8em;
+    color: #fff;
+    text-align: center;
+    animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #007bff, 0 0 40px #007bff, 0 0 50px #007bff, 0 0 60px #007bff, 0 0 70px #007bff;
+    }
+    to {
+        text-shadow: 0 0 20px #fff, 0 0 30px #00aaff, 0 0 40px #00aaff, 0 0 50px #00aaff, 0 0 60px #00aaff, 0 0 70px #00aaff, 0 0 80px #00aaff;
+    }
+}
+
+/* Form and Preview Container Animations */
+.form-container, .preview-container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ID Card Template Styles */
+#idCardPreview {
+    width: 320px; /* Adjust as needed */
+    height: 500px; /* Adjust as needed */
+    background-color: #f4f4f4; /* Light background for the card itself */
+    color: #333; /* Dark text on the card */
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    position: relative; /* Needed for absolute positioning of watermark */
+    overflow: hidden; /* Ensures watermark doesn't overflow card boundaries if too large */
+}
+
+#idCardPreview:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 16px rgba(0,123,255,0.3);
+}
+
+/* **** NEW: Watermark Styles **** */
+.watermark-logo {
+    position: absolute;
+    top: 59%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg); /* Center, move up/left, and rotate */
+    width: 100%; /* Adjust size as needed, relative to card width */
+    max-height: 70%; /* Ensure it doesn't get too tall */
+    object-fit: contain;
+    opacity: 0.10; /* Adjust transparency */
+    z-index: 0; /* Ensure it's behind other content */
+    pointer-events: none; /* Make it non-interactive */
+}
+
+.id-card-header, .id-card-body, .id-card-footer {
+    position: relative; /* Ensure these are above the watermark */
+    z-index: 1;
+}
+
+.id-card-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.logo-img {
+    width: 60px; /* Adjust as needed */
+    height: 60px; /* Adjust as needed */
+    object-fit: contain;
+    margin-right: 15px;
+    border-radius: 50%; /* Optional: if logos are circular */
+   
+}
+
+#idCardPreview:hover .logo-img {
+    animation-play-state: running;
+}
+
+@keyframes spinLogo {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.university-name-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #003366; /* Dark blue for university name */
+}
+
+.id-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.student-photo-container {
+    width: 120px; /* Adjust as needed */
+    height: 120px; /* Adjust as needed */
+    border: 3px solid #007bff;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.student-photo-container:hover {
+    transform: scale(1.1);
+}
+
+.student-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.student-details p {
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.student-details p strong {
+    color: #0056b3; /* Slightly different blue for labels */
+}
+
+.id-card-footer {
+    text-align: center;
+    font-size: 0.8em;
+    color: #555;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    margin-top: auto; /* Pushes footer to the bottom */
+}
+
+/* Input field focus animation */
+.form-control:focus {
+    animation: inputFocus 0.3s ease-in-out;
+}
+
+@keyframes inputFocus {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Placeholder images - replace with your actual placeholders or remove if not needed */
+#previewLogo[src="placeholder-logo.png"],
+#previewStudentPhoto[src="placeholder-photo.png"],
+#previewWatermarkLogo[src="placeholder-logo.png"] { /* Style placeholder watermark too */
+    opacity: 0.5;
+}
+#previewWatermarkLogo[src="placeholder-logo.png"] {
+    opacity: 0.10; /* Ensure placeholder watermark is also faint */
+}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+</head>
+<body class="dark-mode">
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4 glow-effect">ID Card Generator</h1>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-dark text-light shadow-lg form-container">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Enter Details</h5>
+                        <form id="idForm">
+                            <div class="form-group">
+                                <label for="universityName">University Name:</label>
+                                <input type="text" class="form-control" id="universityName" placeholder="e.g., Metropolis University">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentName">Student Name:</label>
+                                <input type="text" class="form-control" id="studentName" placeholder="e.g., Clark Kent">
+                            </div>
+                            <div class="form-group">
+                                <label for="studentId">Student ID:</label>
+                                <input type="text" class="form-control" id="studentId" placeholder="e.g., STU00123">
+                            </div>
+                            <div class="form-group">
+                                <label for="education">Education/Course:</label>
+                                <input type="text" class="form-control" id="education" placeholder="e.g., B.Sc. Journalism">
+                            </div>
+                            <div class="form-group">
+                                <label for="bloodGroup">Blood Group:</label>
+                                <input type="text" class="form-control" id="bloodGroup" placeholder="e.g., O+">
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Address:</label>
+                                <textarea class="form-control" id="address" rows="2" placeholder="e.g., 123 Fortress Street, Metropolis"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone Number:</label>
+                                <input type="tel" class="form-control" id="phoneNumber" placeholder="e.g., 555-0100">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" class="form-control" id="email" placeholder="e.g., clark.kent@dailyplanet.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="logoUpload">University Logo (for header & watermark):</label>
+                                <input type="file" class="form-control-file" id="logoUpload" accept="image/*">
+                            </div>
+                            <div class="form-group">
+                                <label for="photoUpload">Student Photo:</label>
+                                <input type="file" class="form-control-file" id="photoUpload" accept="image/*">
+                            </div>
+                            <button type="button" id="generateCard" class="btn btn-primary btn-block mt-3">Generate Preview</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card bg-dark text-light shadow-lg preview-container">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">ID Card Preview</h5>
+                        <div id="idCardPreview" class="id-card-template mx-auto">
+                            <img id="previewWatermarkLogo" src="placeholder-logo.png" alt="Watermark" class="watermark-logo">
+
+                            <div class="id-card-header">
+                                <img id="previewLogo" src="placeholder-logo.png" alt="University Logo" class="logo-img">
+                                <h4 id="previewUniversityName" class="university-name-text">University Name</h4>
+                            </div>
+                            <div class="id-card-body">
+                                <div class="student-photo-container">
+                                    <img id="previewStudentPhoto" src="placeholder-photo.png" alt="Student Photo" class="student-photo-img">
+                                </div>
+                                <div class="student-details">
+                                    <p><strong>Student ID:</strong> <span id="previewStudentId">STU00000</span></p>
+                                    <p><strong>Name:</strong> <span id="previewStudentName">Student Name</span></p>
+                                    <p><strong>Course:</strong> <span id="previewEducation">Education</span></p>
+                                    <p><strong>Blood Group:</strong> <span id="previewBloodGroup">Blood Group</span></p>
+                                    <p><strong>Address:</strong> <span id="previewAddress">Address</span></p>
+                                    <p><strong>Phone:</strong> <span id="previewPhoneNumber">Phone Number</span></p>
+                                    <p><strong>Email:</strong> <span id="previewEmail">Email</span></p>
+                                </div>
+                            </div>
+                            <div class="id-card-footer">
+                                <p>Student ID Card</p>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button id="downloadJPG" class="btn btn-success mr-2">Download JPG</button>
+                            <button id="downloadPDF" class="btn btn-danger">Download PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    const idForm = document.getElementById('idForm');
+    const generateCardButton = document.getElementById('generateCard');
+    const downloadJPGButton = document.getElementById('downloadJPG');
+    const downloadPDFButton = document.getElementById('downloadPDF');
+    const idCardPreview = document.getElementById('idCardPreview');
+
+    // Input fields
+    const universityNameInput = document.getElementById('universityName');
+    const studentNameInput = document.getElementById('studentName');
+    const studentIdInput = document.getElementById('studentId'); // **** NEW ****
+    const educationInput = document.getElementById('education');
+    const bloodGroupInput = document.getElementById('bloodGroup');
+    const addressInput = document.getElementById('address');
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const emailInput = document.getElementById('email');
+    const logoUploadInput = document.getElementById('logoUpload');
+    const photoUploadInput = document.getElementById('photoUpload');
+
+    // Preview elements
+    const previewLogo = document.getElementById('previewLogo');
+    const previewWatermarkLogo = document.getElementById('previewWatermarkLogo'); // **** NEW ****
+    const previewUniversityName = document.getElementById('previewUniversityName');
+    const previewStudentName = document.getElementById('previewStudentName');
+    const previewStudentId = document.getElementById('previewStudentId'); // **** NEW ****
+    const previewEducation = document.getElementById('previewEducation');
+    const previewBloodGroup = document.getElementById('previewBloodGroup');
+    const previewAddress = document.getElementById('previewAddress');
+    const previewPhoneNumber = document.getElementById('previewPhoneNumber');
+    const previewEmail = document.getElementById('previewEmail');
+    const previewStudentPhoto = document.getElementById('previewStudentPhoto');
+
+    // --- Event Listeners for Input Fields to Update Preview ---
+    function updatePreview() {
+        previewUniversityName.textContent = universityNameInput.value || 'University Name';
+        previewStudentName.textContent = studentNameInput.value || 'Student Name';
+        previewStudentId.textContent = studentIdInput.value || 'STU00000'; // **** NEW ****
+        previewEducation.textContent = educationInput.value || 'Education';
+        previewBloodGroup.textContent = bloodGroupInput.value || 'Blood Group';
+        previewAddress.textContent = addressInput.value || 'Address';
+        previewPhoneNumber.textContent = phoneNumberInput.value || 'Phone Number';
+        previewEmail.textContent = emailInput.value || 'Email';
+    }
+
+    [universityNameInput, studentNameInput, studentIdInput, educationInput, bloodGroupInput, addressInput, phoneNumberInput, emailInput].forEach(input => { // **** ADDED studentIdInput ****
+        input.addEventListener('input', updatePreview);
+    });
+
+    logoUploadInput.addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewLogo.src = e.target.result;
+                previewWatermarkLogo.src = e.target.result; // **** NEW: Update watermark too ****
+                // Reset opacity for non-placeholder watermark image
+                previewWatermarkLogo.style.opacity = '0.10'; // Or your desired watermark opacity from CSS
+            }
+            reader.readAsDataURL(file);
+        } else {
+            previewLogo.src = 'placeholder-logo.png';
+            previewWatermarkLogo.src = 'placeholder-logo.png'; // **** NEW: Update watermark too ****
+            previewWatermarkLogo.style.opacity = '0.10'; // Ensure placeholder watermark opacity
+        }
+    });
+
+    photoUploadInput.addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewStudentPhoto.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        } else {
+            previewStudentPhoto.src = 'placeholder-photo.png';
+        }
+    });
+
+    generateCardButton.addEventListener('click', function() {
+        updatePreview();
+        idCardPreview.classList.add('card-generated-animation');
+        setTimeout(() => {
+            idCardPreview.classList.remove('card-generated-animation');
+        }, 500);
+        alert("ID Card Preview Updated!");
+    });
+
+
+    // --- Download Functionality ---
+    downloadJPGButton.addEventListener('click', function () {
+        html2canvas(idCardPreview, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null, // Ensure transparent background of card is captured if any part is transparent
+            onclone: (documentClone) => { // Ensure watermark is visible for screenshot
+                const clonedWatermark = documentClone.getElementById('previewWatermarkLogo');
+                if (clonedWatermark) {
+                    clonedWatermark.style.display = 'block'; // Or ensure it's visible
+                }
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'id_card.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.click();
+        }).catch(err => {
+            console.error("Error generating JPG:", err);
+            alert("Error generating JPG. Check console for details.");
+        });
+    });
+
+    downloadPDFButton.addEventListener('click', function () {
+        const { jsPDF } = window.jspdf;
+        html2canvas(idCardPreview, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+            onclone: (documentClone) => { // Ensure watermark is visible for screenshot
+                const clonedWatermark = documentClone.getElementById('previewWatermarkLogo');
+                if (clonedWatermark) {
+                    clonedWatermark.style.display = 'block';
+                }
+            }
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png'); // PNG supports transparency better
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [idCardPreview.offsetWidth, idCardPreview.offsetHeight]
+            });
+            pdf.addImage(imgData, 'PNG', 0, 0, idCardPreview.offsetWidth, idCardPreview.offsetHeight);
+            pdf.save('id_card.pdf');
+        }).catch(err => {
+            console.error("Error generating PDF:", err);
+            alert("Error generating PDF. Check console for details.");
+        });
+    });
+
+    // Initial call to set placeholder text if inputs are empty
+    updatePreview();
+    // Ensure initial placeholder watermark has correct opacity
+    if (previewWatermarkLogo.src.includes('placeholder-logo.png')) {
+        previewWatermarkLogo.style.opacity = '0.10';
+    }
+});
+
+// Add CSS for card generation animation (remains the same)
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = `
+.card-generated-animation {
+    animation: pulse 0.5s ease-in-out;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+`;
+document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html>

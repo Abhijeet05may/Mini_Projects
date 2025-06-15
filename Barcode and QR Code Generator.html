@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Encoder - Barcode & QR Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #00ff88;
+            --secondary: #0088ff;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #e0e0e0;
+            --lighter: #ffffff;
+            --gray: #333333;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--dark);
+            color: var(--light);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: var(--darker);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--gray);
+        }
+        
+        .panel h2 {
+            color: var(--secondary);
+            margin-top: 0;
+            border-bottom: 1px solid var(--gray);
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--light);
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0px;
+            background-color: var(--gray);
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: var(--lighter);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        .btn-generate {
+            background-color: var(--primary);
+            color: var(--darker);
+        }
+        
+        .btn-generate:hover {
+            background-color: #00e676;
+            transform: translateY(-2px);
+        }
+        
+        .btn-download {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background-color: #0077e6;
+            transform: translateY(-2px);
+        }
+        
+        .result-container {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--darker);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--gray);
+        }
+        
+        .code-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+        
+        .code-wrapper {
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .code-title {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        #barcode, #qrcode {
+            max-width: 100%;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .tab:hover:not(.active) {
+            border-bottom: 3px solid var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Encoder</h1>
+    <h2 style="text-align: center; color: var(--secondary); margin-bottom: 30px;">Generate Barcodes & QR Codes</h2>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Your Information</h2>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('personal')">Personal</div>
+                <div class="tab" onclick="switchTab('business')">Business</div>
+            </div>
+            
+            <div id="personal-tab">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" placeholder="+1234567890">
+                </div>
+            </div>
+            
+            <div id="business-tab" class="hidden">
+                <div class="form-group">
+                    <label for="company">Company Name</label>
+                    <input type="text" id="company" placeholder="Acme Inc.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="id">ID/Registration</label>
+                    <input type="text" id="id" placeholder="EMP12345">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="data">Custom Data</label>
+                <textarea id="data" placeholder="Enter any additional information you want to encode"></textarea>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-generate" id="generate-btn">Generate Codes</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Code Options</h2>
+            <div class="form-group">
+                <label for="code-type">Code Type</label>
+                <select id="code-type" style="width: 100%; padding: 12px; background-color: var(--gray); border: 1px solid #444; border-radius: 6px; color: var(--lighter); font-size: 16px;">
+                    <option value="both">Both Barcode & QR Code</option>
+                    <option value="barcode">Barcode Only</option>
+                    <option value="qrcode">QR Code Only</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="output-format">Output Format</label>
+                <select id="output-format" style="width: 100%; padding: 12px; background-color: var(--gray); border: 1px solid #444; border-radius: 6px; color: var(--lighter); font-size: 16px;">
+                    <option value="json">Structured Data (JSON)</option>
+                    <option value="text">Plain Text</option>
+                    <option value="vcard">vCard Format</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="include-timestamp" checked style="margin-right: 10px;">
+                    Include Timestamp
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div id="result" class="result-container hidden">
+        <h2 class="code-title">Generated Codes</h2>
+        <p id="encoded-data" style="word-break: break-all; background-color: var(--gray); padding: 15px; border-radius: 6px;"></p>
+        
+        <div class="code-container">
+            <div id="barcode-container" class="code-wrapper">
+                <h3 class="code-title">Barcode</h3>
+                <svg id="barcode"></svg>
+            </div>
+            
+            <div id="qrcode-container" class="code-wrapper">
+                <h3 class="code-title">QR Code</h3>
+                <canvas id="qrcode"></canvas>
+            </div>
+        </div>
+        
+        <div class="btn-group" style="justify-content: center;">
+            <button class="btn-download" id="download-barcode">Download Barcode</button>
+            <button class="btn-download" id="download-qrcode">Download QR Code</button>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            document.getElementById('personal-tab').classList.toggle('hidden', tabName !== 'personal');
+            document.getElementById('business-tab').classList.toggle('hidden', tabName !== 'business');
+        }
+        
+        // Generate codes
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            // Get form values
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const id = document.getElementById('id').value.trim();
+            const customData = document.getElementById('data').value.trim();
+            const codeType = document.getElementById('code-type').value;
+            const outputFormat = document.getElementById('output-format').value;
+            const includeTimestamp = document.getElementById('include-timestamp').checked;
+            
+            // Create data object
+            let data = {};
+            
+            if (document.querySelector('.tab.active').getAttribute('onclick').includes('personal')) {
+                if (name) data.name = name;
+                if (phone) data.phone = phone;
+            } else {
+                if (company) data.company = company;
+                if (id) data.id = id;
+            }
+            
+            if (customData) data.customData = customData;
+            if (includeTimestamp) data.timestamp = new Date().toISOString();
+            
+            // Format the data
+            let dataString;
+            switch(outputFormat) {
+                case 'json':
+                    dataString = JSON.stringify(data, null, 2);
+                    break;
+                case 'text':
+                    dataString = Object.entries(data)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join('\n');
+                    break;
+                case 'vcard':
+                    dataString = 'BEGIN:VCARD\nVERSION:3.0';
+                    if (data.name) dataString += `\nFN:${data.name}`;
+                    if (data.company) dataString += `\nORG:${data.company}`;
+                    if (data.id) dataString += `\nNOTE:ID ${data.id}`;
+                    if (data.phone) dataString += `\nTEL:${data.phone}`;
+                    if (data.customData) dataString += `\nNOTE:${data.customData.replace(/\n/g, '\\n')}`;
+                    dataString += '\nEND:VCARD';
+                    break;
+            }
+            
+            // Display encoded data
+            document.getElementById('encoded-data').textContent = dataString;
+            
+            // Generate codes based on selected options
+            try {
+                // Show/hide containers based on selection
+                document.getElementById('barcode-container').style.display = 
+                    (codeType === 'both' || codeType === 'barcode') ? 'block' : 'none';
+                document.getElementById('qrcode-container').style.display = 
+                    (codeType === 'both' || codeType === 'qrcode') ? 'block' : 'none';
+                
+                // Generate barcode if needed
+                if (codeType === 'both' || codeType === 'barcode') {
+                    JsBarcode("#barcode", dataString, {
+                        format: "CODE128",
+                        lineColor: "#000000",
+                        width: 2,
+                        height: 80,
+                        displayValue: false,
+                        margin: 10
+                    });
+                }
+                
+                // Generate QR code if needed
+                if (codeType === 'both' || codeType === 'qrcode') {
+                    QRCode.toCanvas(document.getElementById('qrcode'), dataString, {
+                        width: 200,
+                        margin: 2,
+                        color: {
+                            dark: '#000000',
+                            light: '#ffffff'
+                        }
+                    }, function(error) {
+                        if (error) console.error(error);
+                    });
+                }
+                
+                // Show result container
+                document.getElementById('result').classList.remove('hidden');
+            } catch (e) {
+                alert('Error generating codes: ' + e.message);
+            }
+        });
+        
+        // Download functionality
+        document.getElementById('download-barcode').addEventListener('click', function() {
+            const svg = document.getElementById('barcode');
+            const serializer = new XMLSerializer();
+            const svgStr = serializer.serializeToString(svg);
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const a = document.createElement('a');
+                a.download = 'data-barcode.png';
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            };
+            
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
+        });
+        
+        document.getElementById('download-qrcode').addEventListener('click', function() {
+            const canvas = document.getElementById('qrcode');
+            const a = document.createElement('a');
+            a.download = 'data-qrcode.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        });
+    </script>
+</body>
+</html>

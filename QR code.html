@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Code Generator with Logo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #181a1b;
+            color: #e0e0e0;
+            min-height: 100vh;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .container {
+            max-width: 480px;
+            margin: 60px auto;
+            background: #23272b;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+            padding: 2.5rem 2rem;
+        }
+        .form-label {
+            color: #00c3ff;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #00c3ff 0%, #3a8dde 100%);
+            border: none;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(270deg, #00c3ff 0%, #3a8dde 100%);
+            transform: scale(1.07);
+            box-shadow: 0 2px 14px #00c3ff30;
+        }
+        #qrcode {
+            margin: 1.5rem auto 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+        .logo-preview {
+            max-width: 60px;
+            max-height: 60px;
+            margin-top: 0.5rem;
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            margin-top: 2rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="mb-4 text-center" style="color:#ffffff; font-weight:700;">QR Code Generator with Logo</h2>
+    <form id="qrForm">
+        <div class="mb-3">
+            <label for="qrText" class="form-label">Text or URL</label>
+            <input type="text" class="form-control" id="qrText" placeholder="Enter text or URL" required>
+        </div>
+        <div class="mb-3">
+            <label for="logoInput" class="form-label">Logo (optional, PNG/JPG)</label>
+            <input type="file" class="form-control" id="logoInput" accept="image/png, image/jpeg">
+            <div id="logoPreview"></div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Generate QR Code</button>
+    </form>
+    <div id="qrcode"></div>
+</div>
+
+
+<!-- QRCode.js (from CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+let logoImage = null;
+
+// Logo preview
+document.getElementById('logoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('logoPreview');
+    preview.innerHTML = '';
+    logoImage = null;
+    if (file) {
+        const img = document.createElement('img');
+        img.className = 'logo-preview';
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+        logoImage = img;
+    }
+});
+
+document.getElementById('qrForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const text = document.getElementById('qrText').value.trim();
+    if (!text) return;
+
+    // Remove old QR code
+    document.getElementById('qrcode').innerHTML = '';
+
+    // Generate QR code on a hidden div
+    const tempDiv = document.createElement('div');
+    new QRCode(tempDiv, {
+        text: text,
+        width: 300,
+        height: 300,
+        colorDark: "#181a1b",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Wait a moment for QRCode.js to render
+    setTimeout(() => {
+        // Get the QR code's <img> or <canvas>
+        let qrImg = tempDiv.querySelector('img');
+        let qrCanvas = tempDiv.querySelector('canvas');
+        let qrElement = qrCanvas || qrImg;
+
+        // Draw on canvas for logo overlay
+        let canvas;
+        if (qrImg) {
+            // If QRCode.js rendered an <img>, draw it on a canvas
+            canvas = document.createElement('canvas');
+            canvas.width = qrImg.width;
+            canvas.height = qrImg.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(qrImg, 0, 0, canvas.width, canvas.height);
+        } else if (qrCanvas) {
+            // Already a canvas
+            canvas = qrCanvas;
+        }
+
+        // Draw logo in center if available
+        if (logoImage && logoImage.src) {
+            const ctx = canvas.getContext('2d');
+            // Draw logo as a circle with white border for contrast
+            const logoSize = canvas.width * 0.22; // 22% of QR size
+            const x = (canvas.width - logoSize) / 2;
+            const y = (canvas.height - logoSize) / 2;
+
+            // Draw white circle for border
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2, logoSize/2 + 4, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#fff';
+            ctx.globalAlpha = 0.8;
+            ctx.shadowColor = '#00c3ff';
+            ctx.shadowBlur = 6;
+            ctx.fill();
+            ctx.restore();
+
+            // Draw logo image as a circle
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2, logoSize/2, 0, 2 * Math.PI, false);
+            ctx.closePath();
+            ctx.clip();
+            // Draw the logo image
+            const tempLogo = new window.Image();
+            tempLogo.onload = function() {
+                ctx.drawImage(tempLogo, x, y, logoSize, logoSize);
+                // Show the canvas
+                document.getElementById('qrcode').innerHTML = '';
+                document.getElementById('qrcode').appendChild(canvas);
+            };
+            tempLogo.src = logoImage.src;
+            return; // Wait for logo to load before showing QR
+        }
+
+        // Show the canvas
+        document.getElementById('qrcode').appendChild(canvas);
+    }, 100);
+});
+</script>
+</body>
+</html>

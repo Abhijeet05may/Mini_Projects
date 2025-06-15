@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Find Location by IP Address</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    #location { margin-top: 1em; }
+    input[type="text"] { font-size: 1em; padding: 0.3em; }
+    button { font-size: 1em; padding: 0.3em 1em; }
+  </style>
+</head>
+<body>
+  <h2>Find Location by IP Address</h2>
+  <input type="text" id="ipInput" placeholder="Enter IP address" pattern="^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" minlength="7" maxlength="15" size="15">
+  <button onclick="findLocation()">Find Location</button>
+  <div id="location"></div>
+
+  <script>
+    function isValidIP(ip) {
+      // Simple IPv4 validation regex
+      return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip);
+    }
+
+    function findLocation() {
+      const ip = document.getElementById('ipInput').value.trim();
+      const locationDiv = document.getElementById('location');
+      if (!isValidIP(ip)) {
+        locationDiv.innerHTML = '<span style="color:red;">Invalid IP address format.</span>';
+        return;
+      }
+      locationDiv.innerText = 'Fetching location...';
+      fetch('http://ip-api.com/json/' + ip)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "success") {
+            locationDiv.innerHTML = `
+              <strong>IP Address:</strong> ${data.query}<br>
+              <strong>Country:</strong> ${data.country}<br>
+              <strong>Region:</strong> ${data.regionName}<br>
+              <strong>City:</strong> ${data.city}<br>
+              <strong>Latitude:</strong> ${data.lat}<br>
+              <strong>Longitude:</strong> ${data.lon}
+            `;
+          } else {
+            locationDiv.innerHTML = '<span style="color:red;">Location not found for this IP.</span>';
+          }
+        })
+        .catch(error => {
+          locationDiv.innerText = 'Error fetching location.';
+          console.error(error);
+        });
+    }
+  </script>
+</body>
+</html>
